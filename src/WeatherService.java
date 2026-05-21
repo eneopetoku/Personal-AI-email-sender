@@ -5,6 +5,7 @@ import java.net.URL;
 
 public class WeatherService {
 
+    private static final int RAIN_THRESHOLD = 50;
     private static final double LATITUDE = 41.3275;
     private static final double LONGITUDE = 19.8187;
 
@@ -78,7 +79,7 @@ public class WeatherService {
                             + tomorrowProbability + "%"
             );
 
-            return tomorrowProbability >= 50;
+            return tomorrowProbability >= RAIN_THRESHOLD;
 
         } catch (Exception e) {
             e.printStackTrace();
