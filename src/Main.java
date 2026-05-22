@@ -5,13 +5,54 @@ public class Main {
         WeatherService weatherService =
                 new WeatherService();
 
-        boolean willRain =
-                weatherService.willRainTomorrow();
+        WeatherForecast forecast =
+                weatherService.getForecast();
 
-        if (willRain) {
-            System.out.println("It will probably rain tomorrow.");
-        } else {
-            System.out.println("No significant rain expected tomorrow.");
+        if (forecast == null) {
+
+            System.out.println(
+                    "Could not fetch forecast."
+            );
+
+            return;
         }
+
+        int tomorrowRain =
+                forecast.getRainProbabilities()[1];
+
+        boolean heavyRainTomorrow =
+                tomorrowRain >= 70;
+
+        if (heavyRainTomorrow) {
+
+            System.out.println(
+                    "SEND SEPARATE RAIN ALERT EMAIL"
+            );
+        }
+
+        PromptBuilder promptBuilder =
+                new PromptBuilder();
+
+        String prompt =
+                promptBuilder.buildWeatherPrompt(
+                        forecast
+                );
+
+        System.out.println(prompt);
+
+        AIService aiService =
+                new AIService();
+
+        String summary =
+                aiService.generateSummary(
+                        prompt
+                );
+
+        System.out.println(
+                "AI WEATHER SUMMARY:"
+        );
+
+        System.out.println(summary);
+        System.out.println("finished");
     }
 }

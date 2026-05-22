@@ -3,13 +3,17 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import java.time.LocalDate;
+import java.time.format.TextStyle;
+import java.util.Locale;
+
 public class WeatherService {
 
-    private static final int RAIN_THRESHOLD = 50;
     private static final double LATITUDE = 41.3275;
+
     private static final double LONGITUDE = 19.8187;
 
-    public boolean willRainTomorrow() {
+    public WeatherForecast getForecast() {
 
         try {
 
@@ -17,7 +21,9 @@ public class WeatherService {
                     "https://api.open-meteo.com/v1/forecast" +
                             "?latitude=" + LATITUDE +
                             "&longitude=" + LONGITUDE +
-                            "&daily=precipitation_probability_max" +
+                            "&daily=precipitation_probability_max," +
+                            "temperature_2m_max," +
+                            "temperature_2m_min" +
                             "&timezone=auto";
 
             URL url = new URL(urlString);
@@ -34,11 +40,13 @@ public class WeatherService {
                             )
                     );
 
-            StringBuilder response = new StringBuilder();
+            StringBuilder response =
+                    new StringBuilder();
 
             String line;
 
             while ((line = reader.readLine()) != null) {
+
                 response.append(line);
             }
 
@@ -46,44 +54,145 @@ public class WeatherService {
 
             String json = response.toString();
 
-            System.out.println(json);
-
-            // Find the SECOND occurrence
-            // (the real precipitation array)
-
-            int firstIndex =
-                    json.indexOf("precipitation_probability_max");
-
-            int secondIndex =
-                    json.indexOf(
-                            "precipitation_probability_max",
-                            firstIndex + 1
+            int[] rainProbabilities =
+                    extractIntArray(
+                            json,
+                            "precipitation_probability_max"
                     );
 
-            String sub =
-                    json.substring(secondIndex);
-
-            String numbers =
-                    sub.substring(
-                            sub.indexOf("[") + 1,
-                            sub.indexOf("]")
+            double[] maxTemperatures =
+                    extractDoubleArray(
+                            json,
+                            "temperature_2m_max"
                     );
 
-            String[] values = numbers.split(",");
+            double[] minTemperatures =
+                    extractDoubleArray(
+                            json,
+                            "temperature_2m_min"
+                    );
 
-            int tomorrowProbability =
-                    Integer.parseInt(values[1].trim());
+            int numberOfDays =
+                    rainProbabilities.length;
 
-            System.out.println(
-                    "Tomorrow rain probability: "
-                            + tomorrowProbability + "%"
+            String[] dates =
+                    new String[numberOfDays];
+
+            String[] weekdays =
+                    new String[numberOfDays];
+
+            LocalDate today =
+                    LocalDate.now();
+
+            for (int i = 0; i < numberOfDays; i++) {
+
+                LocalDate date =
+                        today.plusDays(i);
+
+                dates[i] =
+                        date.toString();
+
+                weekdays[i] =
+                        date.getDayOfWeek()
+                                .getDisplayName(
+                                        TextStyle.FULL,
+                                        Locale.ENGLISH
+                                );
+            }
+
+            return new WeatherForecast(
+                    dates,
+                    weekdays,
+                    rainProbabilities,
+                    maxTemperatures,
+                    minTemperatures
             );
 
-            return tomorrowProbability >= RAIN_THRESHOLD;
-
         } catch (Exception e) {
+
             e.printStackTrace();
-            return false;
+
+            return null;
         }
+    }
+
+    private int[] extractIntArray(
+            String json,
+            String field
+    ) {
+
+        int firstIndex =
+                json.indexOf(field);
+
+        int secondIndex =
+                json.indexOf(
+                        field,
+                        firstIndex + 1
+                );
+
+        String sub =
+                json.substring(secondIndex);
+
+        String numbers =
+                sub.substring(
+                        sub.indexOf("[") + 1,
+                        sub.indexOf("]")
+                );
+
+        String[] values =
+                numbers.split(",");
+
+        int[] result =
+                new int[values.length];
+
+        for (int i = 0; i < values.length; i++) {
+
+            result[i] =
+                    Integer.parseInt(
+                            values[i].trim()
+                    );
+        }
+
+        return result;
+    }
+
+    private double[] extractDoubleArray(
+            String json,
+            String field
+    ) {
+
+        int firstIndex =
+                json.indexOf(field);
+
+        int secondIndex =
+                json.indexOf(
+                        field,
+                        firstIndex + 1
+                );
+
+        String sub =
+                json.substring(secondIndex);
+
+        String numbers =
+                sub.substring(
+                        sub.indexOf("[") + 1,
+                        sub.indexOf("]")
+                );
+
+        String[] values =
+                numbers.split(",");
+
+        double[] result =
+                new double[values.length];
+
+        for (int i = 0; i < values.length; i++) {
+
+            result[i] =
+                    Double.parseDouble(
+                            values[i].trim()
+                    );
+        }
+
+        return result;
     }
 }
