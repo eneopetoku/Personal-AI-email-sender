@@ -30,7 +30,7 @@ public class AIService {
 
             HttpResponse<String> response =
                     client.send(request, HttpResponse.BodyHandlers.ofString());
-
+            System.out.println("out test:"+ response.body());
             return response.body();
 
         } catch (Exception e) {
