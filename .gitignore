@@ -1,2 +1,16 @@
+# Build output (Maven)
+target/
+
+# Old manual build folder (you had this)
 out/
+
+# IDE files (IntelliJ / general Java IDEs)
+.idea/
+*.iml
+
+# Compiled Java classes (if any slip in)
+*.class
+
+# OS files
+.DS_Storeout/
 .idea/
